@@ -1,8 +1,10 @@
 FROM ubuntu:16.04
+ARG VENDOR_NAME
+ARG VENDOR_DOMAIN
 
 ARG CONTAINER_NAME
 ARG CONTRAIL_CONTAINER_TAG
-LABEL vendor="Juniper" \
+LABEL vendor=$VENDOR_NAME \
       version=$CONTRAIL_CONTAINER_TAG \
       release="5.1.0" \
       name=$CONTAINER_NAME \
@@ -29,4 +31,5 @@ COPY entrypoint.sh /
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-LABEL net.juniper.contrail.container.name=$CONTAINER_NAME
+ENV CONTRAIL_VERSION=$CONTRAIL_CONTAINER_TAG
+LABEL $VENDOR_DOMAIN".container.name"=$CONTAINER_NAME

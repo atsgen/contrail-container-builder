@@ -24,6 +24,8 @@ echo "INFO: Contrail container tag: $CONTRAIL_CONTAINER_TAG"
 echo "INFO: Contrail generic base extra rpms: $GENERAL_EXTRA_RPMS"
 echo "INFO: Contrail base extra rpms: $BASE_EXTRA_RPMS"
 echo "INFO: yum additional repos to enable: $YUM_ENABLE_REPOS"
+echo "INFO: Vendor: $VENDOR_NAME"
+echo "INFO: Vendor Domain: $VENDOR_DOMAIN"
 
 if [ -n "$opts" ]; then
   echo "INFO: Options: $opts"
@@ -68,6 +70,8 @@ function process_container() {
   build_arg_opts+=" --build-arg BASE_EXTRA_RPMS=\"${BASE_EXTRA_RPMS}\""
   build_arg_opts+=" --build-arg YUM_ENABLE_REPOS=\"$YUM_ENABLE_REPOS\""
   build_arg_opts+=" --build-arg CONTAINER_NAME=${container_name}"
+  build_arg_opts+=" --build-arg VENDOR_NAME=${VENDOR_NAME}"
+  build_arg_opts+=" --build-arg VENDOR_DOMAIN=${VENDOR_DOMAIN}"
 
   if [[ -f ./$dir/.externals ]]; then
     local item=''
