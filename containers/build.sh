@@ -26,6 +26,7 @@ echo "INFO: Contrail base extra rpms: $BASE_EXTRA_RPMS"
 echo "INFO: yum additional repos to enable: $YUM_ENABLE_REPOS"
 echo "INFO: Vendor: $VENDOR_NAME"
 echo "INFO: Vendor Domain: $VENDOR_DOMAIN"
+echo "INFO: Container Name Prefix: $CONTAINER_PREFIX"
 
 if [ -n "$opts" ]; then
   echo "INFO: Options: $opts"
@@ -46,7 +47,7 @@ function process_container() {
     return
   fi
   local container_name=`echo ${dir#"./"} | tr "/" "-"`
-  local container_name="contrail-${container_name}"
+  local container_name="${CONTAINER_PREFIX}-${container_name}"
   echo "INFO: Building $container_name"
 
   tag="${CONTRAIL_CONTAINER_TAG}"
@@ -57,7 +58,7 @@ function process_container() {
     cat ${docker_file} | awk '{if(ncmt!=1 && $1=="ARG"){print("#"$0)}else{print($0)}; if($1=="FROM"){ncmt=1}}' > ${docker_file}.nofromargs
     # and then change FROM-s that uses ARG-s
     sed -i \
-      -e "s|^FROM \${CONTRAIL_REGISTRY}/\([^:]*\):\${CONTRAIL_CONTAINER_TAG}|FROM ${CONTRAIL_REGISTRY}/\1:${tag}|" \
+      -e "s|^FROM \${CONTRAIL_REGISTRY}/\${CONTAINER_PREFIX}\([^:]*\):\${CONTRAIL_CONTAINER_TAG}|FROM ${CONTRAIL_REGISTRY}/${CONTAINER_PREFIX}\1:${tag}|" \
       -e "s|^FROM \$LINUX_DISTR:\$LINUX_DISTR_VER|FROM $LINUX_DISTR:$LINUX_DISTR_VER|" \
       ${docker_file}.nofromargs
     docker_file="${docker_file}.nofromargs"
@@ -72,6 +73,7 @@ function process_container() {
   build_arg_opts+=" --build-arg CONTAINER_NAME=${container_name}"
   build_arg_opts+=" --build-arg VENDOR_NAME=${VENDOR_NAME}"
   build_arg_opts+=" --build-arg VENDOR_DOMAIN=${VENDOR_DOMAIN}"
+  build_arg_opts+=" --build-arg CONTAINER_PREFIX=${CONTAINER_PREFIX}"
 
   if [[ -f ./$dir/.externals ]]; then
     local item=''

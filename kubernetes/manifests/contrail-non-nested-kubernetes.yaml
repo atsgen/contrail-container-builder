@@ -64,15 +64,15 @@ data:
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: contrail-kube-manager
+  name: {{CONTAINER_PREFIX}}-kube-manager
   namespace: kube-system
   labels:
-    app: contrail-kube-manager
+    app: {{CONTAINER_PREFIX}}-kube-manager
 spec:
   template:
     metadata:
       labels:
-        app: contrail-kube-manager
+        app: {{CONTAINER_PREFIX}}-kube-manager
     spec:
       affinity:
         nodeAffinity:
@@ -91,14 +91,14 @@ spec:
       automountServiceAccountToken: false
       hostNetwork: true
       initContainers:
-      - name: contrail-node-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: {{CONTAINER_PREFIX}}-node-init
+        image: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-node-init:{{CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+          value: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-status:{{CONTRAIL_CONTAINER_TAG}}"
         envFrom:
         - configMapRef:
             name: env
@@ -106,8 +106,8 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       containers:
-      - name: contrail-kube-manager
-        image: "{{CONTRAIL_REGISTRY}}/contrail-kubernetes-kube-manager:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: {{CONTAINER_PREFIX}}-kube-manager
+        image: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-kubernetes-kube-manager:{{CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -127,7 +127,7 @@ spec:
           path: /var/log/contrail/kube-manager
       - name: pod-secret
         secret:
-          secretName: contrail-kube-manager-token
+          secretName: {{CONTAINER_PREFIX}}-kube-manager-token
       - name: host-usr-bin
         hostPath:
           path: /usr/bin
@@ -135,15 +135,15 @@ spec:
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: contrail-agent
+  name: {{CONTAINER_PREFIX}}-agent
   namespace: kube-system
   labels:
-    app: contrail-agent
+    app: {{CONTAINER_PREFIX}}-agent
 spec:
   template:
     metadata:
       labels:
-        app: contrail-agent
+        app: {{CONTAINER_PREFIX}}-agent
     spec:
       #Disable affinity for single node setup
       affinity:
@@ -162,21 +162,21 @@ spec:
       automountServiceAccountToken: false
       hostNetwork: true
       initContainers:
-      - name: contrail-node-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: {{CONTAINER_PREFIX}}-node-init
+        image: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-node-init:{{CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+          value: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-status:{{CONTRAIL_CONTAINER_TAG}}"
         envFrom:
         - configMapRef:
             name: env
         volumeMounts:
         - mountPath: /host/usr/bin
           name: host-usr-bin
-      - name: contrail-vrouter-kernel-init
+      - name: {{CONTAINER_PREFIX}}-vrouter-kernel-init
         image: "{{CONTRAIL_REGISTRY}}/{{VROUTER_KERNEL_INIT_IMAGE}}:{{CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
@@ -197,8 +197,8 @@ spec:
           name: etc-contrail
         - mountPath: /etc/sysconfig/network-scripts
           name: network-scripts
-      - name: contrail-kubernetes-cni-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: {{CONTAINER_PREFIX}}-kubernetes-cni-init
+        image: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-kubernetes-cni-init:{{CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -211,17 +211,17 @@ spec:
         - mountPath: /host/opt_cni_bin
           name: opt-cni-bin
         - mountPath: /host/log_cni
-          name: var-log-contrail-cni
+          name: var-log-{{CONTAINER_PREFIX}}-cni
         - mountPath: /var/log/contrail
           name: agent-logs
       containers:
-      - name: contrail-vrouter-agent
-        image: "{{CONTRAIL_REGISTRY}}/contrail-vrouter-agent:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: {{CONTAINER_PREFIX}}-vrouter-agent
+        image: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-vrouter-agent:{{CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
         # is not present in the container. The mounting it into container
         # doesnt help because of permissions are not enough syscalls,
-        # e.g. https://github.com/Juniper/contrail-controller/blob/master/src/vnsw/agent/contrail/linux/pkt0_interface.cc: 48.
+        # e.g. https://github.com/Juniper/{{CONTAINER_PREFIX}}-controller/blob/master/src/vnsw/agent/contrail/linux/pkt0_interface.cc: 48.
         securityContext:
           privileged: true
         envFrom:
@@ -254,8 +254,8 @@ spec:
           preStop:
             exec:
               command: ["/clean-up.sh"]
-      - name: contrail-agent-nodemgr
-        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: {{CONTAINER_PREFIX}}-agent-nodemgr
+        image: "{{CONTRAIL_REGISTRY}}/{{CONTAINER_PREFIX}}-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -286,7 +286,7 @@ spec:
           path: /var/run
       - name: pod-secret
         secret:
-          secretName: contrail-kube-manager-token
+          secretName: {{CONTAINER_PREFIX}}-kube-manager-token
       - name: usr-src
         hostPath:
           path: /usr/src
@@ -305,7 +305,7 @@ spec:
       - name: opt-cni-bin
         hostPath:
           path: /opt/cni/bin
-      - name: var-log-contrail-cni
+      - name: var-log-{{CONTAINER_PREFIX}}-cni
         hostPath:
           path: /var/log/contrail/cni
       - name: agent-logs
@@ -332,7 +332,7 @@ spec:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: contrail-kube-manager
+  name: {{CONTAINER_PREFIX}}-kube-manager
   namespace: kube-system
 rules:
   - apiGroups: ["*"]
@@ -342,27 +342,27 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: contrail-kube-manager
+  name: {{CONTAINER_PREFIX}}-kube-manager
   namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: contrail-kube-manager
+  name: {{CONTAINER_PREFIX}}-kube-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: contrail-kube-manager
+  name: {{CONTAINER_PREFIX}}-kube-manager
 subjects:
 - kind: ServiceAccount
-  name: contrail-kube-manager
+  name: {{CONTAINER_PREFIX}}-kube-manager
   namespace: kube-system
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: contrail-kube-manager-token
+  name: {{CONTAINER_PREFIX}}-kube-manager-token
   namespace: kube-system
   annotations:
-    kubernetes.io/service-account.name: contrail-kube-manager
+    kubernetes.io/service-account.name: {{CONTAINER_PREFIX}}-kube-manager
 type: kubernetes.io/service-account-token
