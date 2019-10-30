@@ -1,9 +1,11 @@
 ARG CONTRAIL_REGISTRY
 ARG CONTRAIL_CONTAINER_TAG
-FROM ${CONTRAIL_REGISTRY}/contrail-analytics-base:${CONTRAIL_CONTAINER_TAG}
+ARG CONTAINER_PREFIX
+FROM ${CONTRAIL_REGISTRY}/${CONTAINER_PREFIX}-analytics-base:${CONTRAIL_CONTAINER_TAG}
+ARG VENDOR_DOMAIN
 
 # TODO: split analytics pacakge into several small packages
 
 ENV NODE_TYPE=analytics-snmp
-LABEL net.juniper.contrail.pod=$NODE_TYPE
+LABEL $VENDOR_DOMAIN".pod"=$NODE_TYPE
 CMD ["/usr/bin/tail","-f","/dev/null"]

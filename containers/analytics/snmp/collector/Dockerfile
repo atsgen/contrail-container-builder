@@ -16,7 +16,5 @@ CMD ["/usr/bin/python","/usr/bin/contrail-snmp-collector","--device-config-file"
 
 ENV SERVICE_NAME=snmp-collector
 
-LABEL net.juniper.contrail.service=$SERVICE_NAME
-LABEL net.juniper.contrail.container.name=$CONTAINER_NAME
 LABEL $VENDOR_DOMAIN".service"=$SERVICE_NAME
 LABEL $VENDOR_DOMAIN".container.name"=$CONTAINER_NAME
