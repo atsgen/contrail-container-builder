@@ -2,6 +2,7 @@
 
 source /common.sh
 source /agent-functions.sh
+source /load-modules.sh
 
 echo "INFO: agent started in $AGENT_MODE mode"
 
@@ -32,6 +33,7 @@ trap 'trap_vrouter_agent_term' SIGTERM SIGINT
 # Send SIGHUP signal to child process
 trap 'trap_vrouter_agent_hub' SIGHUP
 
+tungsten_init
 pre_start_init
 
 # init_vhost for dpdk case is called from dpdk container.

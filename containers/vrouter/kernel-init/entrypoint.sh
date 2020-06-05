@@ -16,6 +16,10 @@ enable_kernel_module () {
 
 copy_agent_tools_to_host
 
+TF_MODULES_DIR="/tungsten/modules/"
+if [ -d "$TF_MODULES_DIR" ]; then
+  cp -R -f /opt/contrail/vrouter-kernel-modules/* $TF_MODULES_DIR
+else
 # Collect kernel module versions from package
 mod_dir=$(find /opt/contrail/. -type f -name "vrouter.ko" | awk  -F "/" '{print($(NF-1))}')
 available_modules=$(echo "$mod_dir" | sed 's/\.el/ el/' | sort -V | sed 's/ /./1')
@@ -42,5 +46,6 @@ for d in $installed_kernels ; do
     enable_kernel_module $(echo "$sorted_list" | grep -B1 "$d" | grep -v "$d") "$d"
   fi
 done
+fi
 
 exec $@
