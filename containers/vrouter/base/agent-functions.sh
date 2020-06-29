@@ -494,6 +494,30 @@ function check_vrouter_agent_settings() {
 function ensure_host_resolv_conf() {
     local path='/etc/resolv.conf'
     local host_path="/host${path}"
+    if [[ ! -z "$DHCP_OVERRIDE_VHOST" ]]; then
+        if [[ ! -f "/host/etc/resolv.conf.vrouter-override" ]] ; then
+            pushd "/host/etc/"
+            mv resolv.conf resolv.conf.vrouter-override
+            ln -s ./resolv.conf.vrouter-override resolv.conf
+            popd
+        fi
+        host_path="/host/etc/resolv.conf.vrouter-override"
+    fi
+    # ensure that the host path exits
+    touch $host_path
+    if [[ -e $path && -e $host_path  ]] && ! diff -U 3 $host_path $path > /dev/null 2>&1 ; then
+        local container_content=$(cat $path)
+        echo -e "INFO: $path:\n${container_content}"
+        echo -e "INFO: $host_path:\n$(cat $host_path)"
+        if [ -n "$container_content" ] ; then
+            echo "INFO: sync $path to $host_path"
+            cp -f $path $host_path
+        fi
+    fi
+    path='/etc/hostname'
+    host_path="/host${path}"
+    # ensure that the host path exits
+    touch $host_path
     if [[ -e $path && -e $host_path  ]] && ! diff -U 3 $host_path $path > /dev/null 2>&1 ; then
         local container_content=$(cat $path)
         echo -e "INFO: $path:\n${container_content}"
@@ -505,11 +529,39 @@ function ensure_host_resolv_conf() {
     fi
 }
 
+function dhcp_override_vhost() {
+    if [[ ! -e "/etc/sysconfig/network-scripts/network-functions" ]] ; then
+        # ensure availability of network-scripts for dhcliet
+        cp -f /network-functions-dhclient /etc/sysconfig/network-scripts/network-functions
+    fi
+
+    if [[ ! -f "/etc/sysconfig/network-scripts/ifcfg-vhost0"  ]]; then
+        local phys_int phys_int_mac
+        IFS=' ' read -r phys_int phys_int_mac <<< $(get_physical_nic_and_mac)
+        cat << EOM > /etc/sysconfig/network-scripts/ifcfg-vhost0
+BOOTPROTO=dhcp
+NAME=vhost0
+DEVICE=vhost0
+NM_CONTROLLED=no
+ONBOOT=yes
+DELAY=0
+TYPE=kernel
+BIND_INT=$phys_int
+EOM
+    fi
+    # kill previously running dhclients for vhost0
+    kill_dhcp_clients vhost0
+    dhclient vhost0
+}
+
 function init_vhost0() {
     # Probe vhost0
     local vrouter_cidr="$(get_cidr_for_nic vhost0)"
     if [[ "$vrouter_cidr" != '' ]] ; then
         echo "INFO: vhost0 is already up"
+        if [[ ! -z "$DHCP_OVERRIDE_VHOST" ]]; then
+            dhcp_override_vhost
+        fi
         ensure_host_resolv_conf
         return 0
     fi
@@ -576,6 +628,11 @@ function init_vhost0() {
         fi
         ip link set dev vhost0 down
         ifup vhost0 || { echo "ERROR: failed to ifup vhost0." && ret=1; }
+        check_physical_mtu ${mtu} ${phys_int}
+    elif [[ ! -z "$DHCP_OVERRIDE_VHOST" ]]; then
+        # TODO: switch off dhcp on phys_int permanently
+        kill_dhcp_clients ${phys_int}
+        dhcp_override_vhost
         check_physical_mtu ${mtu} ${phys_int}
     else
         echo "INFO: there is no ifcfg-$phys_int and ifcfg-vhost0, so initialize vhost0 manually"
