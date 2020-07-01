@@ -535,19 +535,9 @@ function dhcp_override_vhost() {
         cp -f /network-functions-dhclient /etc/sysconfig/network-scripts/network-functions
     fi
 
-    local phys_int phys_int_mac
-    IFS=' ' read -r phys_int phys_int_mac <<< $(get_physical_nic_and_mac)
-    if [[ ! -f "/etc/sysconfig/network-scripts/ifcfg-$phys_int"  ]]; then
-        cat << EOM > /etc/sysconfig/network-scripts/ifcfg-$phys_int
-BOOTPROTO=none
-NAME=$phys_int
-DEVICE=$phys_int
-NM_CONTROLLED=no
-TYPE=Ethernet
-EOM
-    fi
-
     if [[ ! -f "/etc/sysconfig/network-scripts/ifcfg-vhost0"  ]]; then
+        local phys_int phys_int_mac
+        IFS=' ' read -r phys_int phys_int_mac <<< $(get_physical_nic_and_mac)
         cat << EOM > /etc/sysconfig/network-scripts/ifcfg-vhost0
 BOOTPROTO=dhcp
 NAME=vhost0
