@@ -632,6 +632,10 @@ function init_vhost0() {
     elif [[ ! -z "$DHCP_OVERRIDE_VHOST" ]]; then
         # TODO: switch off dhcp on phys_int permanently
         kill_dhcp_clients ${phys_int}
+        echo "$addrs" | while IFS= read -r line ; do
+            local addr_to_del=`echo $line | cut -d ' ' -f 1`
+            ip address delete $addr_to_del dev $phys_int || { echo "ERROR: failed to del $addr_to_del from ${phys_int}." && ret=1; }
+        done
         dhcp_override_vhost
         check_physical_mtu ${mtu} ${phys_int}
     else
