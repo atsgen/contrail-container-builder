@@ -630,6 +630,9 @@ function init_vhost0() {
         ifup vhost0 || { echo "ERROR: failed to ifup vhost0." && ret=1; }
         check_physical_mtu ${mtu} ${phys_int}
     elif [[ ! -z "$DHCP_OVERRIDE_VHOST" ]]; then
+        # let the service running on host detect, vhost0 interface and stop network manager
+        # before we proceed further
+        sleep 5
         # TODO: switch off dhcp on phys_int permanently
         kill_dhcp_clients ${phys_int}
         echo "$addrs" | while IFS= read -r line ; do
