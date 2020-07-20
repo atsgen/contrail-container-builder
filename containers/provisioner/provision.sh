@@ -174,6 +174,9 @@ vrouter)
     echo "ERROR: vhost0 is not up .. exit to allow docker policy to restart container if needed"
     exit 1
   fi
+  # wait for some time to allow DHCP to push DNS configuration
+  # allowing to fetch the right hostname
+  sleep 5
   host_ip=$(get_ip_for_vrouter_from_control)
   vhost_if=$(get_iface_for_vrouter_from_control)
   if_cidr=$(get_cidr_for_nic $vhost_if)
