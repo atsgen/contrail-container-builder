@@ -494,15 +494,6 @@ function check_vrouter_agent_settings() {
 function ensure_host_resolv_conf() {
     local path='/etc/resolv.conf'
     local host_path="/host${path}"
-    if [[ ! -z "$DHCP_OVERRIDE_VHOST" ]]; then
-        if [[ ! -f "/host/etc/resolv.conf.vrouter-override" ]] ; then
-            pushd "/host/etc/"
-            mv resolv.conf resolv.conf.vrouter-override
-            ln -s ./resolv.conf.vrouter-override resolv.conf
-            popd
-        fi
-        host_path="/host/etc/resolv.conf.vrouter-override"
-    fi
     # ensure that the host path exits
     touch $host_path
     if [[ -e $path && -e $host_path  ]] && ! diff -U 3 $host_path $path > /dev/null 2>&1 ; then
