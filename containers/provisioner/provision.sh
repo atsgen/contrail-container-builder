@@ -41,16 +41,6 @@ function provision_subcluster() {
   provision $script --oper add $rest_params
 }
 
-function check_agent_running() {
-  test -n "$(ps -ax | grep vrouter-agent | grep -v grep | grep -v entrypoint)"
-}
-
-function wait_vrouter_agent() {
-  printf "INFO: wait for vrouter agent"
-  wait_cmd_success "check_agent_running" || { echo -e "\nERROR: agent is not running" && return 1; }
-  echo -e "\nINFO: agent is running"
-}
-
 default_hostname=$(get_default_hostname)
 case $NODE_TYPE in
 
@@ -182,12 +172,6 @@ vrouter)
   # the host_ip deriving logic and vhost0 initialization
   if ! wait_nic_up vhost0 ; then
     echo "ERROR: vhost0 is not up .. exit to allow docker policy to restart container if needed"
-    exit 1
-  fi
-  # wait for some time to allow DHCP to push DNS configuration
-  # allowing to fetch the right hostname
-  if ! wait_vrouter_agent ; then
-    echo "ERROR: failed to get status of vrouter agent ... exiting"
     exit 1
   fi
   host_ip=$(get_ip_for_vrouter_from_control)
